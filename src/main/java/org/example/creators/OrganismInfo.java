@@ -1,22 +1,22 @@
-package org.example.entity.organism.animal.herbivore;
+package org.example.creators;
 
-import org.example.entity.organism.animal.Animal;
-
-public class Rabbit extends Animal {
+public class OrganismInfo {
+    private String type;
     private double weight;
     private int maxNumPerCell;
     private double probability;
     private int speed;
     private double foodNeed;
-    public Rabbit() {
+
+    public OrganismInfo() {
     }
 
-    public Rabbit(double weight, int maxNumPerCell, double probability, int speed, double foodNeed) {
-        this.weight = weight;
-        this.maxNumPerCell = maxNumPerCell;
-        this.probability = probability;
-        this.speed = speed;
-        this.foodNeed = foodNeed;
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public double getWeight() {

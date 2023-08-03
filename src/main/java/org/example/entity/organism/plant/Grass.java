@@ -1,8 +1,8 @@
 package org.example.entity.organism.plant;
 
 public class Grass extends Plant{
-    private double weight = 1;
-    private int maxNumPerCell = 45;
+    private double weight;
+    private int maxNumPerCell;
 
     public Grass() {
     }
