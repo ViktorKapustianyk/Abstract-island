@@ -1,6 +1,7 @@
 package org.example.entity.organism;
 
 import org.example.entity.organism.animal.herbivore.Rabbit;
+import org.example.entity.organism.animal.predator.Boa;
 import org.example.entity.organism.plant.Grass;
 
 import java.util.HashMap;
@@ -8,7 +9,8 @@ import java.util.Map;
 
 public enum Type {
     RABBIT(Rabbit.class),
-    GRASS(Grass.class);
+    GRASS(Grass.class),
+    BOA(Boa.class);
 
     private final Class<? extends Organism> organismClass;
     private static final Map<Class<? extends Organism>, Type> classToTypeMap = new HashMap<>();

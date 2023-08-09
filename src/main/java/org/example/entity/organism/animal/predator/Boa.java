@@ -1,4 +1,4 @@
-package org.example.entity.organism.animal.herbivore;
+package org.example.entity.organism.animal.predator;
 import lombok.*;
 import org.example.entity.organism.animal.Animal;
 @Getter
@@ -6,5 +6,5 @@ import org.example.entity.organism.animal.Animal;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class Rabbit extends Animal {
+public class Boa extends Animal {
 }

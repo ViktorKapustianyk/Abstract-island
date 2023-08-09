@@ -4,11 +4,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-
+@Getter
+@Setter
 public class GameField {
     private final int width;
     private final int height;
@@ -29,19 +32,6 @@ public class GameField {
             }
         }
     }
-
-    public Cell[][] getCells() {
-        return cells;
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
     public static GameField readGameFieldConfigFile(String filePath) throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         return mapper.readValue(new File(filePath), GameField.class);
