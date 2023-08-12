@@ -39,6 +39,7 @@ public class OrganismPopulationManager {
         organism.setWeight(organismInfo.getWeight());
         organism.setMaxNumPerCell(organismInfo.getMaxNumPerCell());
         organism.setSpeed(organismInfo.getSpeed());
+        organism.setAlive(true);
 
         if (organism instanceof Animal) {
             Animal animal = (Animal) organism;
@@ -50,7 +51,6 @@ public class OrganismPopulationManager {
                 animal.setEatProbability(eatType, eatProbability.getProbability());
             }
         }
-
         return organism;
     }
 }

@@ -18,5 +18,6 @@ public class OrganismInfo {
     private int maxNumPerCell;
     private int speed;
     private double foodNeed;
+    private boolean isAlive;
     private List<EatProbability> eatProbabilities;
 }

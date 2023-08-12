@@ -6,7 +6,6 @@ import org.example.entity.organism.Type;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-
 public class Cell {
     private final Map<Type, Set<Organism>> residents;
 

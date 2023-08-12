@@ -1,5 +1,7 @@
 package org.example.creators;
 
+import org.example.entity.organism.Type;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -11,7 +13,7 @@ public class OrganismCreator<T> {
         this.clazz = clazz;
     }
 
-    public T createOrganism() {
+    public T createOrganism(Class<T> clazz) {
         T organism = null;
         try {
             organism = clazz.newInstance();

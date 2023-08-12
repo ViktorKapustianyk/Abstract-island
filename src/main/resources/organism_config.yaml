@@ -1,0 +1,27 @@
+- type: Boa
+  weight: 15.0
+  maxNumPerCell: 2
+  speed: 1
+  foodNeed: 3
+  eatProbabilities:
+    - type: RABBIT
+      probability: 20
+    - type: BOA
+      probability: 0.0
+    - type: GRASS
+      probability: 0.0
+- type: Rabbit
+  weight: 2.0
+  maxNumPerCell: 8
+  speed: 2
+  foodNeed: 0.45
+  eatProbabilities:
+    - type: GRASS
+      probability: 100
+    - type: RABBIT
+      probability: 0.0
+    - type: BOA
+      probability: 0.0
+- type: Grass
+  weight: 1.0
+  maxNumPerCell: 16
