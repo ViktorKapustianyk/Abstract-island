@@ -19,7 +19,7 @@ public class Tribe {
     }
 
     public void createTribe() throws Exception {
-        List<OrganismInfo> organismInfoList = readOrganismConfigFile("/Users/alexandra/IdeaProjects/Abstract-island/src/main/resources/organism_config.yaml");
+        List<OrganismInfo> organismInfoList = readOrganismConfigFile("src/main/resources/organism_config.yaml");
 
         OrganismPopulationManager populationManager = new OrganismPopulationManager();
         populationManager.populate(cells, organismInfoList);

@@ -1,7 +1,7 @@
 - type: Boa
   weight: 15.0
-  maxNumPerCell: 2
-  speed: 1
+  maxNumPerCell: 4
+  speed: 5
   foodNeed: 3
   eatProbabilities:
     - type: RABBIT
@@ -12,8 +12,8 @@
       probability: 0.0
 - type: Rabbit
   weight: 2.0
-  maxNumPerCell: 8
-  speed: 2
+  maxNumPerCell: 4
+  speed: 4
   foodNeed: 0.45
   eatProbabilities:
     - type: GRASS
@@ -24,4 +24,4 @@
       probability: 0.0
 - type: Grass
   weight: 1.0
-  maxNumPerCell: 16
+  maxNumPerCell: 4

@@ -9,10 +9,37 @@ import java.util.*;
 
 import org.example.entity.organism.Type;
 import org.example.entity.organism.animal.Animal;
+import org.example.entity.organism.animal.herbivore.Rabbit;
+import org.example.entity.organism.animal.predator.Boa;
 import org.example.entity.organism.plant.Grass;
+import org.example.entity.organism.plant.Plant;
 
 public class Main {
     public static void main(String[] args) throws Exception {
+
+//        Rabbit rabbit = new Rabbit();
+//        rabbit.setWeight(1.0);
+//        rabbit.setMaxNumPerCell(5);
+//        rabbit.setSpeed(2);
+//        rabbit.setFoodNeed(0.5);
+//        rabbit.setAlive(true);
+//
+//        Organism newRabbit = rabbit.reproduce();
+//
+//        System.out.println("Original Rabbit: " + rabbit);
+//        System.out.println("Newly Reproduced Rabbit: " + newRabbit);
+//
+//        Grass grass = new Grass();
+//        grass.setWeight(1.0);
+//        grass.setMaxNumPerCell(5);
+//        grass.setSpeed(2);
+//        grass.setFoodNeed(0.5);
+//        grass.setAlive(true);
+//
+//        Organism newGrass = grass.reproduce();
+//
+//        System.out.println("Original Grass: " + grass);
+//        System.out.println("Newly Reproduced Grass: " + newGrass);
 
         // Створення об'єкту класу GameField
         GameField gameField = GameField.readGameFieldConfigFile("src/main/resources/game_field_config.yaml");
@@ -27,7 +54,7 @@ public class Main {
 
         // Виклик методу для виведення масивів до терміналу
         printCellArrays(gameField);
-        simulationEat(gameField);
+        simulationMove(gameField);
         //removeDeadOrganisms(gameField);
         printCellArrays(gameField);
 //        printRabbitHashCodes(gameField);
@@ -84,39 +111,58 @@ public class Main {
                     Cell currentCell = cells[i][j];
                     Map<Type, Set<Organism>> residents = currentCell.getResidents();
 
-                    List<Organism> newGrasses = new ArrayList<>(); // Список для зберігання нових об'єктів Grass
+                    Map<Type, Integer> typeCounts = new HashMap<>(); // Мапа для зберігання лічильників кількості об'єктів кожного типу
 
                     for (Type type : residents.keySet()) {
                         Set<Organism> organisms = residents.get(type);
+                        int count = 0; // Лічильник кількості об'єктів даного типу
+                        for (Organism organism : organisms) {
+                            if (organism instanceof Animal && organism.isAlive()) {
+                                count++;
+                            }
+                        }
 
-                        Iterator<Organism> iterator = organisms.iterator();
-                        while (iterator.hasNext()) {
-                            Organism organism = iterator.next();
-                            if (organism instanceof Animal) {
-                                Animal animal = (Animal) organism;
-                                if (animal.isAlive()) {
-                                    System.out.println("****Chosen HUNT: ******" + animal.getClass().getSimpleName() + animal.hashCode());
-                                    animal.eat(currentCell);
-                                }
-                            } else if (organism instanceof Grass) {
-                                Grass grass = (Grass) organism;
-                                if (grass.isAlive()) {
-                                    System.out.println("****Chosen REPRODUCE: ******" + grass.getClass().getSimpleName() + grass.hashCode());
-                                    Organism newGrass = grass.reproduce();
-                                    newGrasses.add(newGrass); // Додавання нового трав'янистого об'єкта до списку
+                        typeCounts.put(type, count);
+                    }
+
+                    List<Organism> newOrganisms = new ArrayList<>(); // Список для зберігання нових об'єктів
+
+                    for (Type type : residents.keySet()) {
+                        int count = typeCounts.getOrDefault(type, 0);
+                        int canMaxAdd = 10 - count;
+                        if (count >= 2) { // Перевіряємо, чи є більше двох об'єктів даного типу
+                            Set<Organism> organisms = residents.get(type);
+                            for (Organism organism : organisms) {
+                                if (organism instanceof Animal && organism.isAlive()) {
+                                    Animal animal = (Animal) organism;
+                                    Organism newOrganism = animal.reproduce();
+                                    System.out.println("****Chosen REPRODUCE: ****** " + newOrganism.getClass().getSimpleName()
+                                            + " " + newOrganism.hashCode()
+                                            + " " + newOrganism.getMaxNumPerCell()
+                                            + " " + newOrganism.getWeight()
+                                            + " " + newOrganism.getFoodNeed());
+                                    if (canMaxAdd > 0) {
+                                        newOrganisms.add(newOrganism);
+                                        canMaxAdd--;
+                                    }
                                 }
                             }
                         }
                     }
 
-                    // Додавання нових об'єктів Grass після закінчення ітерації
-                    for (Organism newGrass : newGrasses) {
-                        residents.get(Type.GRASS).add(newGrass);
+                    for (Organism organism : newOrganisms) {
+                        String fullClassName = organism.getClass().getName(); // Отримуємо повне ім'я класу (включаючи пакет)
+                        String[] parts = fullClassName.split("\\."); // Розбиваємо ім'я на частини за роздільником "."
+                        String simpleClassName = parts[parts.length - 1]; // Остання частина є простим іменем класу
+
+                        Type targetType = Type.valueOf(simpleClassName.toUpperCase()); // Перетворюємо на Enum Type
+                        residents.get(targetType).add(organism);
                     }
                 }
             }
         }
     }
+
     public static void simulationMove(GameField gameField) {
         Cell[][] cells = gameField.getCells();
         int numSteps = 1;
@@ -134,7 +180,7 @@ public class Main {
                             if (organism instanceof Animal) {
                                 Animal animal = (Animal) organism;
                                 if (animal.isAlive()) {
-                                    animal.move(currentCell, i, j, gameField);
+                                    animal.move(currentCell, gameField);
                                 }
                             }
                         }

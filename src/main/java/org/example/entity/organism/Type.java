@@ -2,6 +2,7 @@ package org.example.entity.organism;
 
 import org.example.entity.organism.animal.herbivore.Rabbit;
 import org.example.entity.organism.animal.predator.Boa;
+
 import org.example.entity.organism.plant.Grass;
 
 import java.util.HashMap;
