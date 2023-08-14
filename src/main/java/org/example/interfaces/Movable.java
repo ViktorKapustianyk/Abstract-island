@@ -4,5 +4,5 @@ import org.example.entity.map.Cell;
 import org.example.entity.map.GameField;
 
 public interface Movable {
-    void move(Cell currentCell, GameField gameField);
+    void move(Cell currentCell, GameField gameField, int currentX, int currentY);
 }

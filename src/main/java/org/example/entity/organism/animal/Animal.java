@@ -13,6 +13,7 @@ import org.example.interfaces.Movable;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.locks.Lock;
 
 @Getter
 public abstract class Animal extends Organism implements Movable, Eatable {
@@ -30,44 +31,70 @@ public abstract class Animal extends Organism implements Movable, Eatable {
         return eatProbabilities.getOrDefault(type, 0.0);
     }
 
-    public void move(Cell currentCell, GameField gameField) {
-//        int speed = getSpeed();
-//        int newX = currentX;
-//        int newY = currentY;
+    public void move(Cell currentCell, GameField gameField, int currentX, int currentY) {
 
-        // Генерируем случайное направление перемещения (вверх, вниз, влево, вправо)
-        Random random = ThreadLocalRandom.current();
         int speed = getSpeed();
-        int newX = random.nextInt(gameField.getWidth());
-        System.out.print("newX :" + newX);
-        int newY = random.nextInt(gameField.getHeight());
-        System.out.println(" newY :" + newY);
+        int newX = currentX;
+        int newY = currentY;
 
-//        int direction = random.nextInt(4); // 0 - вверх, 1 - вниз, 2 - влево, 3 - вправо
-//
-//        // В зависимости от направления меняем координаты
-//        switch (direction) {
-//            case 0:
-//                newY = Math.max(0, currentY - speed);
-//                break;
-//            case 1:
-//                newY = Math.min(gameField.getHeight() - 1, currentY + speed);
-//                break;
-//            case 2:
-//                newX = Math.max(0, currentX - speed);
-//                break;
-//            case 3:
-//                newX = Math.min(gameField.getWidth() - 1, currentX + speed);
-//                break;
-//        }
-        if (newX > 0 && newX <= gameField.getWidth() && newY > 0 && newY <= gameField.getHeight()) {
-            // Получаем новую клетку и перемещаемся в нее, если она свободна
-            Cell newCell = gameField.getCells()[newX][newY];
-            reproduceTribe(newCell);
+        Random random = ThreadLocalRandom.current();
+
+        int direction = random.nextInt(4);
+
+        switch (direction) {
+            case 0:
+                newY = Math.max(0, currentY - speed);
+                break;
+            case 1:
+                newY = Math.min(gameField.getHeight() - 1, currentY + speed);
+                break;
+            case 2:
+                newX = Math.max(0, currentX - speed);
+                break;
+            case 3:
+                newX = Math.min(gameField.getWidth() - 1, currentX + speed);
+                break;
         }
-        Map<Type, Set<Organism>> residents = currentCell.getResidents();
-        List<Organism> dropOut = new ArrayList<>();
 
+        if (newX >= 0 && newX < gameField.getWidth() && newY >= 0 && newY < gameField.getHeight()) {
+            // Создаем временную коллекцию для хранения информации о перемещении
+            Map<Type, Set<Organism>> currentResidents = currentCell.getResidents();
+
+            Lock currentCellLock = currentCell.getLock();
+            currentCellLock.lock();
+            try {
+                // Получаем организмы текущей ячейки, которые будут перемещены
+                this.killOrganism();
+                List<Organism> deadPreys = new ArrayList<>();
+                deadPreys.add(this);
+
+                for (Type type : currentResidents.keySet()) {
+                    Set<Organism> organisms = currentResidents.get(type);
+                    organisms.removeAll(deadPreys);
+                }
+
+            } finally {
+                currentCellLock.unlock();
+            }
+
+            Lock newCellLock = gameField.getCells()[newX][newY].getLock();
+            newCellLock.lock();
+            try {
+                // Получаем новую клетку и перемещаемся в нее, если она свободна
+                Cell newCell = gameField.getCells()[newX][newY];
+                Organism organism = this.reproduce();
+                Map<Type, Set<Organism>> residents = newCell.getResidents();
+
+                String fullClassName = organism.getClass().getName();
+                String[] parts = fullClassName.split("\\.");
+                String simpleClassName = parts[parts.length - 1];
+
+                Type targetType = Type.valueOf(simpleClassName.toUpperCase());
+                residents.get(targetType).add(organism);
+            } finally {
+                newCellLock.unlock();
+            }
+        }
     }
 
     public void eat(Cell currentCell) {
