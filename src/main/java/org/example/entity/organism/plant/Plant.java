@@ -34,30 +34,27 @@ public abstract class Plant extends Organism {
 
         List<Organism> newOrganisms = new ArrayList<>(); // Список для зберігання нових об'єктів
 
-        for (Type type : residents.keySet()) {
-            int count = typeCounts.getOrDefault(type, 0);
-            int canMaxAdd = getMaxNumPerCell() - count;
-            if (count < getMaxNumPerCell()) { // Перевіряємо, чи об'єктів даного типу не більше MaxNumPerCell
-                Set<Organism> organisms = residents.get(type);
-                for (Organism organism : organisms) {
-                    if (organism instanceof Plant) {
-                        Plant plant = (Plant) organism;
-                        Organism newOrganism = plant.reproduce();
-                        if (canMaxAdd > 0) {
-                            newOrganisms.add(newOrganism);
-                            canMaxAdd--;
-                        }
-                    }
+        int count = typeCounts.getOrDefault(targetType(this), 0);
+
+        Set<Organism> organisms = residents.get(targetType(this));
+        for (Organism organism : organisms) {
+            if (organism instanceof Plant) {
+                Plant plant = (Plant) organism;
+                Organism newOrganism = plant.reproduce();
+                int maxNumPerCell = organism.getMaxNumPerCell();
+                if (maxNumPerCell > count) {
+                    newOrganisms.add(newOrganism);
+                    count++;
                 }
             }
         }
-
         for (Organism organism : newOrganisms) {
             String fullClassName = organism.getClass().getName(); // Отримуємо повне ім'я класу (включаючи пакет)
             String[] parts = fullClassName.split("\\."); // Розбиваємо ім'я на частини за роздільником "."
             String simpleClassName = parts[parts.length - 1]; // Остання частина є простим іменем класу
 
             Type targetType = Type.valueOf(simpleClassName.toUpperCase()); // Перетворюємо на Enum Type
+
             residents.get(targetType).add(organism);
         }
     }

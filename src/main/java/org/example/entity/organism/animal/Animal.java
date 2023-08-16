@@ -8,6 +8,7 @@ import org.example.entity.map.Cell;
 import org.example.entity.map.GameField;
 import org.example.entity.organism.Organism;
 import org.example.entity.organism.Type;
+import org.example.entity.organism.animal.herbivore.Herbivore;
 import org.example.interfaces.Eatable;
 import org.example.interfaces.Movable;
 
@@ -58,25 +59,6 @@ public abstract class Animal extends Organism implements Movable, Eatable {
 
         if (newX >= 0 && newX < gameField.getWidth() && newY >= 0 && newY < gameField.getHeight()) {
             // Создаем временную коллекцию для хранения информации о перемещении
-            Map<Type, Set<Organism>> currentResidents = currentCell.getResidents();
-
-            Lock currentCellLock = currentCell.getLock();
-            currentCellLock.lock();
-            try {
-                // Получаем организмы текущей ячейки, которые будут перемещены
-                this.killOrganism();
-                List<Organism> deadPreys = new ArrayList<>();
-                deadPreys.add(this);
-
-                for (Type type : currentResidents.keySet()) {
-                    Set<Organism> organisms = currentResidents.get(type);
-                    organisms.removeAll(deadPreys);
-                }
-
-            } finally {
-                currentCellLock.unlock();
-            }
-
             Lock newCellLock = gameField.getCells()[newX][newY].getLock();
             newCellLock.lock();
             try {
@@ -85,15 +67,54 @@ public abstract class Animal extends Organism implements Movable, Eatable {
                 Organism organism = this.reproduce();
                 Map<Type, Set<Organism>> residents = newCell.getResidents();
 
-                String fullClassName = organism.getClass().getName();
-                String[] parts = fullClassName.split("\\.");
-                String simpleClassName = parts[parts.length - 1];
+                Map<Type, Integer> typeIntegerMap = typeCounts(newCell);
 
-                Type targetType = Type.valueOf(simpleClassName.toUpperCase());
-                residents.get(targetType).add(organism);
+                int count = typeIntegerMap.getOrDefault(targetType(organism), 0);
+                if (count < this.getMaxNumPerCell()) {
+                    residents.get(targetType(organism)).add(organism);
+                    ++count;
+
+                    Lock currentCellLock = currentCell.getLock();
+                    currentCellLock.lock();
+                    try {
+                        // Получаем организмы текущей ячейки, которые будут перемещены
+                        Map<Type, Set<Organism>> currentResidents = currentCell.getResidents();
+                        this.killOrganism();
+                        List<Organism> deadPreys = new ArrayList<>();
+                        deadPreys.add(this);
+
+                        for (Type type : currentResidents.keySet()) {
+                            Set<Organism> organisms = currentResidents.get(type);
+                            organisms.removeAll(deadPreys);
+                        }
+
+                    } finally {
+                        currentCellLock.unlock();
+                    }
+
+                }
+
             } finally {
                 newCellLock.unlock();
             }
+
+//            Lock currentCellLock = currentCell.getLock();
+//            currentCellLock.lock();
+//            try {
+//                // Получаем организмы текущей ячейки, которые будут перемещены
+//                Map<Type, Set<Organism>> currentResidents = currentCell.getResidents();
+//                this.killOrganism();
+//                List<Organism> deadPreys = new ArrayList<>();
+//                deadPreys.add(this);
+//
+//                for (Type type : currentResidents.keySet()) {
+//                    Set<Organism> organisms = currentResidents.get(type);
+//                    organisms.removeAll(deadPreys);
+//                }
+//
+//            } finally {
+//                currentCellLock.unlock();
+//            }
         }
     }
 
@@ -133,49 +154,24 @@ public abstract class Animal extends Organism implements Movable, Eatable {
 
     public void reproduceTribe(Cell currentCell) {
         Map<Type, Set<Organism>> residents = currentCell.getResidents();
+        Set<Organism> newOrganisms = new HashSet<>(); // Список для зберігання нових об'єктів
 
-        Map<Type, Integer> typeCounts = new HashMap<>(); // Мапа для зберігання лічильників кількості об'єктів кожного типу
+        Map<Type, Integer> typeIntegerMap = typeCounts(currentCell);
 
-        for (Type type : residents.keySet()) {
-            Set<Organism> organisms = residents.get(type);
-            int count = 0; // Лічильник кількості об'єктів даного типу
+        Type typeOfOrganism = targetType(this);
 
-            for (Organism organism : organisms) {
-                if (organism instanceof Animal && organism.isAlive()) {
-                    count++;
-                }
-            }
+        int count = typeIntegerMap.getOrDefault(typeOfOrganism, 0);
 
-            typeCounts.put(type, count);
-        }
-
-        List<Organism> newOrganisms = new ArrayList<>(); // Список для зберігання нових об'єктів
-
-        for (Type type : residents.keySet()) {
-            int count = typeCounts.getOrDefault(type, 0);
-            int canMaxAdd = getMaxNumPerCell() - count;
-            if (count >= 2) { // Перевіряємо, чи є більше двох об'єктів даного типу
-                Set<Organism> organisms = residents.get(type);
-                for (Organism organism : organisms) {
-                    if (organism instanceof Animal && organism.isAlive()) {
-                        Animal animal = (Animal) organism;
-                        Organism newOrganism = animal.reproduce();
-                        if (canMaxAdd > 0) {
-                            newOrganisms.add(newOrganism);
-                            canMaxAdd--;
-                        }
-                    }
+        if (count >= 2) { // Перевіряємо, чи є більше двох об'єктів даного типу
+            if (this instanceof Animal && this.isAlive()) {
+                Organism newOrganism = this.reproduce();
+                if (this.getMaxNumPerCell() > count) {
+                    newOrganisms.add(newOrganism);
                 }
             }
         }
-
         for (Organism organism : newOrganisms) {
-            String fullClassName = organism.getClass().getName(); // Отримуємо повне ім'я класу (включаючи пакет)
-            String[] parts = fullClassName.split("\\."); // Розбиваємо ім'я на частини за роздільником "."
-            String simpleClassName = parts[parts.length - 1]; // Остання частина є простим іменем класу
-
-            Type targetType = Type.valueOf(simpleClassName.toUpperCase()); // Перетворюємо на Enum Type
-            residents.get(targetType).add(organism);
+            residents.get(typeOfOrganism).add(organism);
         }
     }
 
@@ -203,6 +199,24 @@ public abstract class Animal extends Organism implements Movable, Eatable {
         } catch (InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
+    }
+    private Map<Type, Integer> typeCounts(Cell currentCell) {
+        Map<Type, Set<Organism>> residents = currentCell.getResidents();
+        Map<Type, Integer> typeCounts = new HashMap<>(); // Мапа для зберігання лічильників кількості об'єктів кожного типу
+
+        for (Type type : residents.keySet()) {
+            Set<Organism> organisms = residents.get(type);
+            int count = 0; // Лічильник кількості об'єктів даного типу
+
+            for (Organism organism : organisms) {
+                if (organism instanceof Animal && organism.isAlive()) {
+                    count++;
+                }
+            }
+
+            typeCounts.put(type, count);
+        }
+        return typeCounts;
     }
 }
 

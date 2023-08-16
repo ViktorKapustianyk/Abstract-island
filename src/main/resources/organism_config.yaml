@@ -12,7 +12,7 @@
       probability: 0.0
 - type: Rabbit
   weight: 2.0
-  maxNumPerCell: 6
+  maxNumPerCell: 10
   speed: 4
   foodNeed: 0.45
   eatProbabilities:
@@ -24,4 +24,4 @@
       probability: 0.0
 - type: Grass
   weight: 1.0
-  maxNumPerCell: 4
+  maxNumPerCell: 30
