@@ -11,51 +11,43 @@ import org.example.entity.organism.Type;
 import org.example.entity.organism.animal.herbivore.Herbivore;
 import org.example.interfaces.Eatable;
 import org.example.interfaces.Movable;
+import org.example.interfaces.OrganismTask;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.locks.Lock;
 
 @Getter
-public abstract class Animal extends Organism implements Movable, Eatable {
+@Setter
+public abstract class Animal extends Organism implements Movable, Eatable, OrganismTask {
 
     private OrganismFactory organismFactory = new OrganismFactory();
-    ;
-
     private Map<Type, Double> eatProbabilities = new HashMap<>();
-
-    public void setEatProbability(Type type, double probability) {
-        eatProbabilities.put(type, probability);
-    }
-
+    public void setEatProbability(Type type, double probability) {eatProbabilities.put(type, probability);}
     public double getEatProbability(Type type) {
         return eatProbabilities.getOrDefault(type, 0.0);
     }
 
-    public void move(Cell currentCell, GameField gameField, int currentX, int currentY) {
+    public void execute(GameField gameField){
+        eat();
+        reproduceTribe();
+        move(gameField);
+    }
 
-        int speed = getSpeed();
-        int newX = currentX;
-        int newY = currentY;
+    public void move(GameField gameField) {
+
+        Cell currentCell = this.getCell();
+        if (currentCell == null) {
+            return; // Организм не знает, в какой клетке он находится
+        }
 
         Random random = ThreadLocalRandom.current();
 
         int direction = random.nextInt(4);
 
-        switch (direction) {
-            case 0:
-                newY = Math.max(0, currentY - speed);
-                break;
-            case 1:
-                newY = Math.min(gameField.getHeight() - 1, currentY + speed);
-                break;
-            case 2:
-                newX = Math.max(0, currentX - speed);
-                break;
-            case 3:
-                newX = Math.min(gameField.getWidth() - 1, currentX + speed);
-                break;
-        }
+        int speed = getSpeed();
+        int newX = calculateNewX(direction, this.getCurrentX(), speed, gameField);
+        int newY = calculateNewY(direction, this.getCurrentY(), speed, gameField);
 
         if (newX >= 0 && newX < gameField.getWidth() && newY >= 0 && newY < gameField.getHeight()) {
             // Создаем временную коллекцию для хранения информации о перемещении
@@ -97,28 +89,15 @@ public abstract class Animal extends Organism implements Movable, Eatable {
             } finally {
                 newCellLock.unlock();
             }
-
-//            Lock currentCellLock = currentCell.getLock();
-//            currentCellLock.lock();
-//            try {
-//                // Получаем организмы текущей ячейки, которые будут перемещены
-//                Map<Type, Set<Organism>> currentResidents = currentCell.getResidents();
-//                this.killOrganism();
-//                List<Organism> deadPreys = new ArrayList<>();
-//                deadPreys.add(this);
-//
-//                for (Type type : currentResidents.keySet()) {
-//                    Set<Organism> organisms = currentResidents.get(type);
-//                    organisms.removeAll(deadPreys);
-//                }
-//
-//            } finally {
-//                currentCellLock.unlock();
-//            }
         }
     }
 
-    public void eat(Cell currentCell) {
+    public void eat() {
+
+        Cell currentCell = this.getCell();
+        if (currentCell == null) {
+            return; // Организм не знает, в какой клетке он находится, поэтому не может есть
+        }
 
         Map<Type, Set<Organism>> residents = currentCell.getResidents();
         Random random = ThreadLocalRandom.current();
@@ -144,6 +123,7 @@ public abstract class Animal extends Organism implements Movable, Eatable {
                 if (!prey.isAlive()) {
                     deadPreys.add(prey);
                 }
+
             }
         }
         for (Type type : residents.keySet()) {
@@ -152,7 +132,12 @@ public abstract class Animal extends Organism implements Movable, Eatable {
         }
     }
 
-    public void reproduceTribe(Cell currentCell) {
+    public void reproduceTribe() {
+        Cell currentCell = this.getCell();
+        if (currentCell == null) {
+            return; // Организм не знает, в какой клетке он находится, поэтому не может есть
+        }
+
         Map<Type, Set<Organism>> residents = currentCell.getResidents();
         Set<Organism> newOrganisms = new HashSet<>(); // Список для зберігання нових об'єктів
 
@@ -200,23 +185,32 @@ public abstract class Animal extends Organism implements Movable, Eatable {
             throw new RuntimeException(e);
         }
     }
-    private Map<Type, Integer> typeCounts(Cell currentCell) {
-        Map<Type, Set<Organism>> residents = currentCell.getResidents();
-        Map<Type, Integer> typeCounts = new HashMap<>(); // Мапа для зберігання лічильників кількості об'єктів кожного типу
-
-        for (Type type : residents.keySet()) {
-            Set<Organism> organisms = residents.get(type);
-            int count = 0; // Лічильник кількості об'єктів даного типу
-
-            for (Organism organism : organisms) {
-                if (organism instanceof Animal && organism.isAlive()) {
-                    count++;
-                }
-            }
-
-            typeCounts.put(type, count);
+    private int calculateNewX(int direction, int currentX, int speed, GameField gameField) {
+        switch (direction) {
+            case 0:
+            case 1:
+                return currentX;
+            case 2:
+                return Math.max(0, currentX - speed);
+            case 3:
+                return Math.min(gameField.getWidth() - 1, currentX + speed);
+            default:
+                throw new IllegalArgumentException("Invalid direction: " + direction);
         }
-        return typeCounts;
+    }
+
+    private int calculateNewY(int direction, int currentY, int speed, GameField gameField) {
+        switch (direction) {
+            case 0:
+                return Math.max(0, currentY - speed);
+            case 1:
+                return Math.min(gameField.getHeight() - 1, currentY + speed);
+            case 2:
+            case 3:
+                return currentY;
+            default:
+                throw new IllegalArgumentException("Invalid direction: " + direction);
+        }
     }
 }
 

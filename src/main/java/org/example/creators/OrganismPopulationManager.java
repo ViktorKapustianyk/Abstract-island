@@ -2,7 +2,6 @@ package org.example.creators;
 import org.example.entity.map.Cell;
 import org.example.entity.organism.Organism;
 import org.example.entity.organism.Type;
-import org.example.entity.organism.animal.Animal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +23,9 @@ public class OrganismPopulationManager {
                     for (int k = 0; k < organismInfo.getMaxNumPerCell() / 2; k++) {
                         Organism organism = organismFactory.createOrganism(organismInfo);
                         tribe.add(organism);
+                        organism.setCell(cell); // Устанавливаем текущую клетку организма
+                        organism.setCurrentX(i); // Устанавливаем текущие координаты X
+                        organism.setCurrentY(j); // Устанавливаем текущие координаты Y
                     }
                 }
             }

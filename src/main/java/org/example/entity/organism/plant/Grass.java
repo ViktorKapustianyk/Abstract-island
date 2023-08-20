@@ -1,9 +1,7 @@
 package org.example.entity.organism.plant;
 
 import lombok.*;
-import lombok.experimental.SuperBuilder;
-import org.example.entity.organism.Organism;
-import org.example.creators.OrganismInfo;
+import org.example.entity.map.GameField;
 
 @Getter
 @Setter

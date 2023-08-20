@@ -4,8 +4,10 @@ import lombok.Getter;
 import org.example.creators.OrganismFactory;
 import org.example.creators.OrganismInfo;
 import org.example.entity.map.Cell;
+import org.example.entity.map.GameField;
 import org.example.entity.organism.Organism;
 import org.example.entity.organism.Type;
+import org.example.entity.organism.animal.Animal;
 
 import java.util.*;
 
@@ -14,48 +16,34 @@ public abstract class Plant extends Organism {
 
     private OrganismFactory organismFactory = new OrganismFactory();
 
-    public void reproducePlant(Cell currentCell) {
+    public void reproducePlant() {
+        Cell currentCell = this.getCell();
+        if (currentCell == null) {
+            return; // Организм не знает, в какой клетке он находится, поэтому не может есть
+        }
         Map<Type, Set<Organism>> residents = currentCell.getResidents();
 
-        Map<Type, Integer> typeCounts = new HashMap<>(); // Мапа для зберігання лічильників кількості об'єктів кожного типу
+        Map<Type, Integer> typeIntegerMap = typeCounts(currentCell);
 
-        for (Type type : residents.keySet()) {
-            Set<Organism> organisms = residents.get(type);
-            int count = 0; // Лічильник кількості об'єктів даного типу
+        Type typeOfOrganism = targetType(this);
 
-            for (Organism organism : organisms) {
-                if (organism instanceof Plant) {
-                    count++;
-                }
-            }
+        List<Organism> newOrganisms = new ArrayList<>(); // Список для хранения новых объектов
+        int count = residents.get(typeOfOrganism).size();
 
-            typeCounts.put(type, count);
-        }
-
-        List<Organism> newOrganisms = new ArrayList<>(); // Список для зберігання нових об'єктів
-
-        int count = typeCounts.getOrDefault(targetType(this), 0);
-
-        Set<Organism> organisms = residents.get(targetType(this));
+        Set<Organism> organisms = residents.get(typeOfOrganism);
         for (Organism organism : organisms) {
-            if (organism instanceof Plant) {
-                Plant plant = (Plant) organism;
+            if (organism instanceof Plant plant) {
                 Organism newOrganism = plant.reproduce();
-                int maxNumPerCell = organism.getMaxNumPerCell();
-                if (maxNumPerCell > count) {
+                int maxNumPerCell = organism.getMaxNumPerCell(); // Получаем максимальное количество объектов для данного типа
+
+                if (count < maxNumPerCell) { // Проверяем, что можно добавить еще объектов данного типа
                     newOrganisms.add(newOrganism);
                     count++;
                 }
             }
         }
         for (Organism organism : newOrganisms) {
-            String fullClassName = organism.getClass().getName(); // Отримуємо повне ім'я класу (включаючи пакет)
-            String[] parts = fullClassName.split("\\."); // Розбиваємо ім'я на частини за роздільником "."
-            String simpleClassName = parts[parts.length - 1]; // Остання частина є простим іменем класу
-
-            Type targetType = Type.valueOf(simpleClassName.toUpperCase()); // Перетворюємо на Enum Type
-
-            residents.get(targetType).add(organism);
+            residents.get(targetType(organism)).add(organism);
         }
     }
 
@@ -74,5 +62,10 @@ public abstract class Plant extends Organism {
         } catch (InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void execute(GameField gameField){
+        reproducePlant();
+
     }
 }

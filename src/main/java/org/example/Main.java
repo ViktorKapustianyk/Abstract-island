@@ -10,39 +10,17 @@ import java.util.concurrent.locks.Lock;
 
 import org.example.entity.organism.Type;
 import org.example.entity.organism.animal.Animal;
+import org.example.entity.organism.animal.herbivore.Herbivore;
 import org.example.entity.organism.animal.herbivore.Rabbit;
 import org.example.entity.organism.animal.predator.Boa;
 import org.example.entity.organism.plant.Grass;
 import org.example.entity.organism.plant.Plant;
+import org.example.worker.GameWorker;
 
 public class Main {
     private static Animal animal;
 
     public static void main(String[] args) throws Exception {
-
-//        Rabbit rabbit = new Rabbit();
-//        rabbit.setWeight(1.0);
-//        rabbit.setMaxNumPerCell(5);
-//        rabbit.setSpeed(2);
-//        rabbit.setFoodNeed(0.5);
-//        rabbit.setAlive(true);
-//
-//        Organism newRabbit = rabbit.reproduce();
-//
-//        System.out.println("Original Rabbit: " + rabbit);
-//        System.out.println("Newly Reproduced Rabbit: " + newRabbit);
-//
-//        Grass grass = new Grass();
-//        grass.setWeight(1.0);
-//        grass.setMaxNumPerCell(5);
-//        grass.setSpeed(2);
-//        grass.setFoodNeed(0.5);
-//        grass.setAlive(true);
-//
-//        Organism newGrass = grass.reproduce();
-//
-//        System.out.println("Original Grass: " + grass);
-//        System.out.println("Newly Reproduced Grass: " + newGrass);
 
         // Створення об'єкту класу GameField
         GameField gameField = GameField.readGameFieldConfigFile("src/main/resources/game_field_config.yaml");
@@ -55,14 +33,17 @@ public class Main {
             throw new RuntimeException(e);
         }
 
+        GameWorker gameWorker = new GameWorker(gameField);
+        gameWorker.start();
+
         // Виклик методу для виведення масивів до терміналу
-        printCellArrays(gameField);
-        simulationEat(gameField);
-        printCellArrays(gameField);
-        simulationReproduce(gameField);
-        printCellArrays(gameField);
-        simulationMove(gameField);
-        printCellArrays(gameField);
+//        printCellArrays(gameField);
+//        simulationEat(gameField);
+//        printCellArrays(gameField);
+//        simulationReproduce(gameField);
+//        printCellArrays(gameField);
+//        simulationMove(gameField);
+//        printCellArrays(gameField);
 
 //        simulationCunt(gameField);
 
@@ -132,7 +113,7 @@ public class Main {
     // Виконуємо симуляцію протягом деякої кількості кроків
     public static void simulationEat(GameField gameField) throws InstantiationException, IllegalAccessException {
         Cell[][] cells = gameField.getCells();
-        int numSteps = 1;
+        int numSteps = 2;
         for (int step = 1; step <= numSteps; step++) {
             System.out.println("Step " + step + ":");
             for (int i = 0; i < cells.length; i++) {
@@ -145,7 +126,7 @@ public class Main {
                         for (Organism organism : organisms) {
                             if (organism instanceof Animal animal) {
                                 System.out.println("_____ Animal hunt _____");
-                                animal.eat(currentCell);
+                                animal.eat();
                             }
                         }
                     }
@@ -153,15 +134,16 @@ public class Main {
             }
         }
     }
+
     public static void simulationMove(GameField gameField) {
         Cell[][] cells = gameField.getCells();
-        for (int i = 0; i < cells.length; i++) {
-            for (int j = 0; j < cells[i].length; j++) {
-                Cell currentCell = cells[i][j];
-                Map<Type, Set<Organism>> residents = currentCell.getResidents();
-                Lock currentCellLock = currentCell.getLock();
-                currentCellLock.lock();
-                try {
+        int numSteps = 2;
+        for (int step = 1; step <= numSteps; step++) {
+            System.out.println("Step " + step + ":");
+            for (int i = 0; i < cells.length; i++) {
+                for (int j = 0; j < cells[i].length; j++) {
+                    Cell currentCell = cells[i][j];
+                    Map<Type, Set<Organism>> residents = currentCell.getResidents();
                     // Создаем копии множеств организмов для безопасной итерации
                     for (Type type : Type.values()) {
                         Set<Organism> organismsCopy = new HashSet<>(residents.getOrDefault(type, new HashSet<>()));
@@ -169,16 +151,15 @@ public class Main {
                             if (organism instanceof Animal && organism.isAlive()) {
                                 Animal animal = (Animal) organism;
                                 System.out.println("________Animal move ________");
-                                animal.move(currentCell, gameField, i, j);
+                                animal.move(gameField);
                             }
                         }
                     }
-                } finally {
-                    currentCellLock.unlock();
                 }
             }
         }
     }
+
     public static void simulationCunt(GameField gameField) throws InstantiationException, IllegalAccessException {
         Cell[][] cells = gameField.getCells();
         int numSteps = 1;
@@ -191,7 +172,7 @@ public class Main {
                     System.out.println(typeIntegerMap);
 
                     Map<Type, Set<Organism>> residents = currentCell.getResidents();
-                    for (Type type : residents.keySet()){
+                    for (Type type : residents.keySet()) {
                         int organisms = countOrganismsOfType(currentCell, type);
                         System.out.println("organism : " + organisms + " " + type);
                     }
@@ -202,7 +183,7 @@ public class Main {
 
     public static void simulationReproduce(GameField gameField) throws InterruptedException {
         Cell[][] cells = gameField.getCells();
-        int numSteps = 1;
+        int numSteps = 2;
 
         for (int step = 1; step <= numSteps; step++) {
             System.out.println("Step " + step + ":");
@@ -211,22 +192,23 @@ public class Main {
                 for (int j = 0; j < cells[i].length; j++) {
                     Cell currentCell = cells[i][j];
 
-                        Map<Type, Set<Organism>> residents = currentCell.getResidents();
+                    Map<Type, Set<Organism>> residents = currentCell.getResidents();
 
-                        for (Type type : residents.keySet()) {
-                            Set<Organism> organisms = new HashSet<>(residents.get(type));
+                    for (Type type : residents.keySet()) {
+                        Set<Organism> organisms = new HashSet<>(residents.get(type));
 
-                            for (Organism organism : organisms) {
-                                if (organism instanceof Animal animal) {
-                                    System.out.println("________Animal reproduce ________");
-                                    animal.reproduceTribe(currentCell);
-                                }
+                        for (Organism organism : organisms) {
+                            if (organism instanceof Plant plant) {
+                                System.out.println("________Animal reproduce ________");
+                                plant.reproducePlant();
                             }
                         }
                     }
                 }
             }
+        }
     }
+
     public static void removeDeadOrganisms(GameField gameField) {
         Cell[][] cells = gameField.getCells();
         for (int i = 0; i < cells.length; i++) {
