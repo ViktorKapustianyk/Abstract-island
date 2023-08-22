@@ -10,6 +10,7 @@ import org.example.entity.organism.Type;
 import org.example.entity.organism.animal.Animal;
 
 import java.util.*;
+import java.util.concurrent.locks.Lock;
 
 @Getter
 public abstract class Plant extends Organism {
@@ -19,31 +20,48 @@ public abstract class Plant extends Organism {
     public void reproducePlant() {
         Cell currentCell = this.getCell();
         if (currentCell == null) {
-            return; // Организм не знает, в какой клетке он находится, поэтому не может есть
+            return;
         }
-        Map<Type, Set<Organism>> residents = currentCell.getResidents();
 
-        Map<Type, Integer> typeIntegerMap = typeCounts(currentCell);
+        Lock residentsLock = currentCell.getResidentsLock();
+        if (residentsLock == null) {
+            return; // Или другие действия, если блокировка недоступна
+        } // Захватываем блокировку на уровне ячейки
+        residentsLock.lock();
+        try {
+            Map<Type, Set<Organism>> residents = currentCell.getResidents();
 
-        Type typeOfOrganism = targetType(this);
+            Type typeOfOrganism = targetType(this);
 
-        List<Organism> newOrganisms = new ArrayList<>(); // Список для хранения новых объектов
-        int count = residents.get(typeOfOrganism).size();
+            Set<Organism> organisms = residents.getOrDefault(typeOfOrganism, new HashSet<>());
+            List<Organism> newOrganisms = new ArrayList<>();
+            int count = organisms.size();
 
-        Set<Organism> organisms = residents.get(typeOfOrganism);
-        for (Organism organism : organisms) {
-            if (organism instanceof Plant plant) {
-                Organism newOrganism = plant.reproduce();
-                int maxNumPerCell = organism.getMaxNumPerCell(); // Получаем максимальное количество объектов для данного типа
+            Lock typeLock = currentCell.getTypeLock(typeOfOrganism);
+            typeLock.lock(); // Захватываем блокировку на уровне типа организма
 
-                if (count < maxNumPerCell) { // Проверяем, что можно добавить еще объектов данного типа
-                    newOrganisms.add(newOrganism);
-                    count++;
+            try {
+                for (Organism organism : organisms) {
+                    if (organism instanceof Plant plant) {
+                        Organism newOrganism = plant.reproduce();
+                        int maxNumPerCell = organism.getMaxNumPerCell();
+
+                        if (count < maxNumPerCell) {
+                            newOrganisms.add(newOrganism);
+                            count++;
+                        }
+                    }
                 }
+
+                // Важно обновить residents только после завершения итерации и модификации данных
+                for (Organism organism : newOrganisms) {
+                    residents.get(targetType(organism)).add(organism);
+                }
+            } finally {
+                typeLock.unlock(); // Освобождаем блокировку на уровне типа организма
             }
-        }
-        for (Organism organism : newOrganisms) {
-            residents.get(targetType(organism)).add(organism);
+        } finally {
+            residentsLock.unlock(); // Освобождаем блокировку на уровне ячейки
         }
     }
 

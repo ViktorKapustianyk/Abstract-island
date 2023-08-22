@@ -11,6 +11,7 @@ import java.util.concurrent.locks.Lock;
 
 public class Cell {
     private final Map<Type, Set<Organism>> residents;
+    private Lock residentsLock = new ReentrantLock(); // Создаем блокировку для residents
     private final Lock lock;
     private final Map<Type, Lock> typeLocks = new HashMap<>(); // Добавляем мапу для хранения блокировок по типам
 
@@ -28,5 +29,8 @@ public class Cell {
     public Lock getTypeLock(Type type) {
         typeLocks.putIfAbsent(type, new ReentrantLock());
         return typeLocks.get(type);
+    }
+    public Lock getResidentsLock() {
+        return residentsLock;
     }
 }

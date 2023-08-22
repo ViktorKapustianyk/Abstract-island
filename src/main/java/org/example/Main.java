@@ -6,16 +6,15 @@ import org.example.entity.map.GameField;
 import org.example.entity.organism.Organism;
 
 import java.util.*;
-import java.util.concurrent.locks.Lock;
 
 import org.example.entity.organism.Type;
 import org.example.entity.organism.animal.Animal;
 import org.example.entity.organism.animal.herbivore.Herbivore;
-import org.example.entity.organism.animal.herbivore.Rabbit;
-import org.example.entity.organism.animal.predator.Boa;
-import org.example.entity.organism.plant.Grass;
 import org.example.entity.organism.plant.Plant;
-import org.example.worker.GameWorker;
+import org.example.worker.AnimalThread;
+import org.example.worker.PlantThread;
+import org.example.worker.Statistics;
+import org.example.worker.StatsThread;
 
 public class Main {
     private static Animal animal;
@@ -33,43 +32,21 @@ public class Main {
             throw new RuntimeException(e);
         }
 
-        GameWorker gameWorker = new GameWorker(gameField);
-        gameWorker.start();
+        Runnable animalThread = new AnimalThread(gameField);
+        Runnable plantThread = new PlantThread(gameField);
+        Runnable statisticsThread = new StatsThread(gameField);
 
-        // Виклик методу для виведення масивів до терміналу
-//        printCellArrays(gameField);
-//        simulationEat(gameField);
-//        printCellArrays(gameField);
-//        simulationReproduce(gameField);
-//        printCellArrays(gameField);
-//        simulationMove(gameField);
-//        printCellArrays(gameField);
+        Thread animalProcessingThread = new Thread(animalThread);
+        Thread plantProcessingThread = new Thread(plantThread);
+        Thread statsThread = new Thread(statisticsThread);
 
-//        simulationCunt(gameField);
+        animalProcessingThread.start();
+        plantProcessingThread.start();
+        statsThread.start();
 
-//        // Получаем случайную ячейку для проверки
-//        int randomX = 0; // задайте случайное значение X
-//        int randomY = 0; // задайте случайное значение Y
-//        Cell randomCell = gameField.getCells()[randomX][randomY];
-//
-//        // Проверяем перемещение одного из организмов в случайную ячейку
-//        Set<Organism> organisms = randomCell.getResidents().get(Type.RABBIT); // предположим, это кролики
-//        if (organisms != null && !organisms.isEmpty()) {
-//            Animal rabbitToMove = (Animal) organisms.iterator().next(); // берем первого попавшегося кролика
-//            rabbitToMove.move(randomCell, gameField, randomX, randomY);
-//        }
-
-
-        // Повторно выводим состояние масивів до терміналу
-//        printCellArrays(gameField);
-
-
-        //simulationMove(gameField);
-        //removeDeadOrganisms(gameField);
-        //printCellArrays(gameField);
-        //printRabbitHashCodes(gameField);
 
     }
+
 
     public static void printCellArrays(GameField gameField) {
         Cell[][] cells = gameField.getCells();
@@ -87,57 +64,9 @@ public class Main {
         }
     }
 
-    public static void printRabbitHashCodes(GameField gameField) {
-        Cell[][] cells = gameField.getCells();
-        for (int i = 0; i < cells.length; i++) {
-            for (int j = 0; j < cells[i].length; j++) {
-                Cell cell = cells[i][j];
-                Set<Organism> rabbits = cell.getResidents().get(Type.BOA);
-                if (rabbits != null) {
-                    System.out.println("Rabbits in Cell[" + i + "][" + j + "]:");
-                    for (Organism rabbit : rabbits) {
-
-                        System.out.println("  HashCode: " + rabbit.hashCode());
-                        double weight = rabbit.getWeight();
-                        int maxNumPerCell = rabbit.getMaxNumPerCell();
-                        int speed = rabbit.getSpeed();
-                        double foodNeed = rabbit.getFoodNeed();
-                        boolean alive = rabbit.isAlive();
-                        System.out.println(weight + " " + maxNumPerCell + " " + speed + " " + foodNeed + " " + alive);
-                    }
-                }
-            }
-        }
-    }
-
-    // Виконуємо симуляцію протягом деякої кількості кроків
-    public static void simulationEat(GameField gameField) throws InstantiationException, IllegalAccessException {
-        Cell[][] cells = gameField.getCells();
-        int numSteps = 2;
-        for (int step = 1; step <= numSteps; step++) {
-            System.out.println("Step " + step + ":");
-            for (int i = 0; i < cells.length; i++) {
-                for (int j = 0; j < cells[i].length; j++) {
-                    Cell currentCell = cells[i][j];
-                    Map<Type, Set<Organism>> residents = currentCell.getResidents();
-
-                    for (Type type : residents.keySet()) {
-                        Set<Organism> organisms = residents.get(type);
-                        for (Organism organism : organisms) {
-                            if (organism instanceof Animal animal) {
-                                System.out.println("_____ Animal hunt _____");
-                                animal.eat();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     public static void simulationMove(GameField gameField) {
         Cell[][] cells = gameField.getCells();
-        int numSteps = 2;
+        int numSteps = 1;
         for (int step = 1; step <= numSteps; step++) {
             System.out.println("Step " + step + ":");
             for (int i = 0; i < cells.length; i++) {
@@ -150,31 +79,10 @@ public class Main {
                         for (Organism organism : organismsCopy) {
                             if (organism instanceof Animal && organism.isAlive()) {
                                 Animal animal = (Animal) organism;
-                                System.out.println("________Animal move ________");
-                                animal.move(gameField);
+//                                System.out.println("________Animal move ________");
+                                animal.execute(gameField);
                             }
                         }
-                    }
-                }
-            }
-        }
-    }
-
-    public static void simulationCunt(GameField gameField) throws InstantiationException, IllegalAccessException {
-        Cell[][] cells = gameField.getCells();
-        int numSteps = 1;
-        for (int step = 1; step <= numSteps; step++) {
-            System.out.println("Step " + step + ":");
-            for (int i = 0; i < cells.length; i++) {
-                for (int j = 0; j < cells[i].length; j++) {
-                    Cell currentCell = cells[i][j];
-                    Map<Type, Integer> typeIntegerMap = typeCounts(currentCell);
-                    System.out.println(typeIntegerMap);
-
-                    Map<Type, Set<Organism>> residents = currentCell.getResidents();
-                    for (Type type : residents.keySet()) {
-                        int organisms = countOrganismsOfType(currentCell, type);
-                        System.out.println("organism : " + organisms + " " + type);
                     }
                 }
             }
@@ -183,7 +91,7 @@ public class Main {
 
     public static void simulationReproduce(GameField gameField) throws InterruptedException {
         Cell[][] cells = gameField.getCells();
-        int numSteps = 2;
+        int numSteps = 1;
 
         for (int step = 1; step <= numSteps; step++) {
             System.out.println("Step " + step + ":");
@@ -194,35 +102,14 @@ public class Main {
 
                     Map<Type, Set<Organism>> residents = currentCell.getResidents();
 
-                    for (Type type : residents.keySet()) {
-                        Set<Organism> organisms = new HashSet<>(residents.get(type));
+                    for (Type type : Type.values()) {
+                        Set<Organism> organismsCopy = new HashSet<>(residents.getOrDefault(type, new HashSet<>()));
 
-                        for (Organism organism : organisms) {
+                        for (Organism organism : organismsCopy) {
                             if (organism instanceof Plant plant) {
-                                System.out.println("________Animal reproduce ________");
-                                plant.reproducePlant();
+//                                System.out.println("________Plant reproduce ________");
+                                plant.execute(gameField);
                             }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    public static void removeDeadOrganisms(GameField gameField) {
-        Cell[][] cells = gameField.getCells();
-        for (int i = 0; i < cells.length; i++) {
-            for (int j = 0; j < cells[i].length; j++) {
-                Cell cell = cells[i][j];
-                Map<Type, Set<Organism>> residents = cell.getResidents();
-
-                for (Type type : residents.keySet()) {
-                    Set<Organism> organisms = residents.get(type);
-                    Iterator<Organism> iterator = organisms.iterator();
-                    while (iterator.hasNext()) {
-                        Organism organism = iterator.next();
-                        if (!organism.isAlive()) {
-                            iterator.remove();
                         }
                     }
                 }
@@ -265,5 +152,113 @@ public class Main {
             typeCounts.put(type, count);
         }
         return typeCounts;
+    }
+
+    public static void printRabbitHashCodes(GameField gameField) {
+        Cell[][] cells = gameField.getCells();
+        for (int i = 0; i < cells.length; i++) {
+            for (int j = 0; j < cells[i].length; j++) {
+                Cell cell = cells[i][j];
+                Set<Organism> rabbits = cell.getResidents().get(Type.BOA);
+                if (rabbits != null) {
+                    System.out.println("Rabbits in Cell[" + i + "][" + j + "]:");
+                    for (Organism rabbit : rabbits) {
+
+                        System.out.println("  HashCode: " + rabbit.hashCode());
+                        double weight = rabbit.getWeight();
+                        int maxNumPerCell = rabbit.getMaxNumPerCell();
+                        int speed = rabbit.getSpeed();
+                        double foodNeed = rabbit.getFoodNeed();
+                        boolean alive = rabbit.isAlive();
+                        System.out.println(weight + " " + maxNumPerCell + " " + speed + " " + foodNeed + " " + alive);
+                    }
+                }
+            }
+        }
+    }
+
+
+    // Виконуємо симуляцію протягом деякої кількості кроків
+    public static void simulationEat(GameField gameField) throws InstantiationException, IllegalAccessException {
+        Cell[][] cells = gameField.getCells();
+        int numSteps = 1;
+        for (int step = 1; step <= numSteps; step++) {
+            System.out.println("Step " + step + ":");
+            for (int i = 0; i < cells.length; i++) {
+                for (int j = 0; j < cells[i].length; j++) {
+                    Cell currentCell = cells[i][j];
+                    Map<Type, Set<Organism>> residents = currentCell.getResidents();
+
+                    for (Type type : residents.keySet()) {
+                        Set<Organism> organisms = residents.get(type);
+                        for (Organism organism : organisms) {
+                            if (organism instanceof Animal animal) {
+                                System.out.println("_____ Animal hunt _____");
+                                animal.eat();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public static void simulationCunt(GameField gameField) throws InstantiationException, IllegalAccessException {
+        Cell[][] cells = gameField.getCells();
+        int numSteps = 1;
+        for (int step = 1; step <= numSteps; step++) {
+            System.out.println("Step " + step + ":");
+            for (int i = 0; i < cells.length; i++) {
+                for (int j = 0; j < cells[i].length; j++) {
+                    Cell currentCell = cells[i][j];
+                    Map<Type, Integer> typeIntegerMap = typeCounts(currentCell);
+                    System.out.println(typeIntegerMap);
+
+                    Map<Type, Set<Organism>> residents = currentCell.getResidents();
+                    for (Type type : residents.keySet()) {
+                        int organisms = countOrganismsOfType(currentCell, type);
+                        System.out.println("organism : " + organisms + " " + type);
+                    }
+                }
+            }
+        }
+    }
+
+    public static void removeDeadOrganisms(GameField gameField) {
+        Cell[][] cells = gameField.getCells();
+        for (int i = 0; i < cells.length; i++) {
+            for (int j = 0; j < cells[i].length; j++) {
+                Cell cell = cells[i][j];
+                Map<Type, Set<Organism>> residents = cell.getResidents();
+
+                for (Type type : residents.keySet()) {
+                    Set<Organism> organisms = residents.get(type);
+                    Iterator<Organism> iterator = organisms.iterator();
+                    while (iterator.hasNext()) {
+                        Organism organism = iterator.next();
+                        if (!organism.isAlive()) {
+                            iterator.remove();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public static boolean hasLivingOrganisms(GameField gameField) {
+        Cell[][] cells = gameField.getCells();
+        for (Cell[] row : cells) {
+            for (Cell cell : row) {
+                Map<Type, Set<Organism>> residents = cell.getResidents();
+                for (Set<Organism> organisms : residents.values()) {
+                    for (Organism organism : organisms) {
+                        if (organism instanceof Herbivore) {
+                            return true; // Если найден Herbivore, возвращаем true
+                        }
+                    }
+                }
+            }
+        }
+        return false; // Если не найдено Herbivore, возвращаем false
     }
 }

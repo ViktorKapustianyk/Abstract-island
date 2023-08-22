@@ -1,9 +1,5 @@
 package org.example.worker;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.example.entity.map.Cell;
 import org.example.entity.map.GameField;
 import org.example.entity.organism.Organism;
@@ -14,48 +10,49 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
-@Getter
-@Setter
-public class Statistics {
-    private GameField gameField;
-    private Lock statisticsLock;
+public class StatsThread implements Runnable {
+    private final GameField gameField;
 
-    public Statistics(GameField gameField) {
+    public StatsThread(GameField gameField) {
         this.gameField = gameField;
     }
 
-    public Map<Type, Integer> getOrganismStatistics() {
-        statisticsLock.lock();
-        try {
-            Cell[][] cells = gameField.getCells();
+    @Override
+    public void run() {
+        while (true) {
+            // Вывод статистики о текущем состоянии gameField
+            synchronized (gameField) {
+                Map<Type, Integer> organismStatistics = getOrganismStatistics(gameField);
+                drawHistogram(organismStatistics);
+            }
+            try {
+                Thread.sleep(5000); // Задержка между выводами статистики
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    public Map<Type, Integer> getOrganismStatistics(GameField gameField) {
 
-            Map<Type, AtomicInteger> organismStatistics = new HashMap<>();
-
-            for (Cell[] row : cells) {
-                for (Cell cell : row) {
-                    Map<Type, Set<Organism>> residents = cell.getResidents();
-
-                    for (Set<Organism> organisms : residents.values()) {
+        Map<Type, Integer> statistics = new HashMap<>();
+        Cell[][] cells = gameField.getCells();
+        for (Cell[] row : cells) {
+            for (Cell cell : row) {
+                cell.getResidentsLock().lock();
+                try {
+                    for (Set<Organism> organisms : cell.getResidents().values()) {
                         for (Organism organism : organisms) {
-
-                            Type organismType = organism.targetType(organism);
-                            organismStatistics
-                                    .computeIfAbsent(organismType, type -> new AtomicInteger())
-                                    .incrementAndGet();
+                            Type type = Type.getTypeFromClass(organism.getClass());
+                            statistics.put(type, statistics.getOrDefault(type, 0) + 1);
                         }
                     }
+                } finally {
+                    cell.getResidentsLock().unlock();
                 }
             }
-
-            Map<Type, Integer> finalStatistics = new HashMap<>();
-            organismStatistics.forEach((type, atomicInteger) -> finalStatistics.put(type, atomicInteger.get()));
-            return finalStatistics;
-        } finally {
-            statisticsLock.unlock();
         }
+        return statistics;
     }
 
     public synchronized void drawHistogram(Map<Type, Integer> data) {

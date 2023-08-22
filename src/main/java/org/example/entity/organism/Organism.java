@@ -9,8 +9,10 @@ import org.example.interfaces.OrganismTask;
 import org.example.interfaces.Reproducible;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
 
 @Getter
 @Setter
@@ -37,12 +39,19 @@ public abstract class Organism implements Reproducible, OrganismTask {
         return targetType;
     }
     public Map<Type, Integer> typeCounts(Cell currentCell) {
-        Map<Type, Set<Organism>> residents = currentCell.getResidents();
-        Map<Type, Integer> typeCounts = new HashMap<>(); // Мапа для зберігання лічильників кількості об'єктів кожного типу
+        Lock residentsLock = currentCell.getResidentsLock();
+        residentsLock.lock(); // Захватываем блокировку на уровне ячейки
 
-        for (Type type : residents.keySet()) {
+        try {
+        Map<Type, Set<Organism>> residents = currentCell.getResidents();
+        Map<Type, Integer> typeCounts = new HashMap<>();
+
+        // Создаем копию ключей для безопасной итерации
+        Set<Type> types = new HashSet<>(residents.keySet());
+
+        for (Type type : types) {
             Set<Organism> organisms = residents.get(type);
-            int count = 0; // Лічильник кількості об'єктів даного типу
+            int count = 0;
 
             for (Organism organism : organisms) {
                 if (organism instanceof Animal && organism.isAlive()) {
@@ -52,6 +61,11 @@ public abstract class Organism implements Reproducible, OrganismTask {
 
             typeCounts.put(type, count);
         }
+
         return typeCounts;
+        } finally {
+            residentsLock.unlock(); // Освобождаем блокировку на уровне ячейки
+        }
     }
+
 }
