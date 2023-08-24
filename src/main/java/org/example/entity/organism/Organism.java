@@ -1,22 +1,15 @@
 package org.example.entity.organism;
 import lombok.*;
 import org.example.entity.map.Cell;
-import org.example.entity.map.GameField;
 import org.example.entity.organism.animal.Animal;
-import org.example.interfaces.Eatable;
-import org.example.interfaces.Movable;
-import org.example.interfaces.OrganismTask;
 import org.example.interfaces.Reproducible;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 
 @Getter
 @Setter
-public abstract class Organism implements Reproducible, OrganismTask {
+public abstract class Organism implements Reproducible{
     private Cell cell;
     private int currentX;
     private int currentY;
@@ -40,31 +33,35 @@ public abstract class Organism implements Reproducible, OrganismTask {
     }
     public Map<Type, Integer> typeCounts(Cell currentCell) {
         Lock residentsLock = currentCell.getResidentsLock();
-        residentsLock.lock(); // Захватываем блокировку на уровне ячейки
+        boolean residentsLockAcquired = false;
 
         try {
-        Map<Type, Set<Organism>> residents = currentCell.getResidents();
-        Map<Type, Integer> typeCounts = new HashMap<>();
+            residentsLockAcquired = residentsLock.tryLock();
+            if (residentsLockAcquired) {
+                Map<Type, Set<Organism>> residents = currentCell.getResidents();
+                Map<Type, Integer> typeCounts = new HashMap<>();
 
-        // Создаем копию ключей для безопасной итерации
-        Set<Type> types = new HashSet<>(residents.keySet());
+                Set<Type> types = new HashSet<>(residents.keySet());
 
-        for (Type type : types) {
-            Set<Organism> organisms = residents.get(type);
-            int count = 0;
+                for (Type type : types) {
+                    Set<Organism> organisms = residents.get(type);
+                    int count = 0;
 
-            for (Organism organism : organisms) {
-                if (organism instanceof Animal && organism.isAlive()) {
-                    count++;
+                    for (Organism organism : organisms) {
+                        if (organism instanceof Animal && organism.isAlive()) {
+                            count++;
+                        }
+                    }
+                    typeCounts.put(type, count);
                 }
+                return typeCounts;
+            } else {
+                return Collections.emptyMap();
             }
-
-            typeCounts.put(type, count);
-        }
-
-        return typeCounts;
         } finally {
-            residentsLock.unlock(); // Освобождаем блокировку на уровне ячейки
+            if (residentsLockAcquired) {
+                residentsLock.unlock();
+            }
         }
     }
 

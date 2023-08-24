@@ -8,21 +8,21 @@ import org.example.entity.map.Cell;
 import org.example.entity.map.GameField;
 import org.example.entity.organism.Organism;
 import org.example.entity.organism.Type;
-import org.example.entity.organism.animal.herbivore.Herbivore;
 import org.example.interfaces.Eatable;
 import org.example.interfaces.Movable;
-import org.example.interfaces.OrganismTask;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Getter
 @Setter
-public abstract class Animal extends Organism implements Movable, Eatable, OrganismTask {
+public abstract class Animal extends Organism implements Movable, Eatable {
 
     private OrganismFactory organismFactory = new OrganismFactory();
     private Map<Type, Double> eatProbabilities = new HashMap<>();
+    private final Lock animalLock = new ReentrantLock();
 
     public void setEatProbability(Type type, double probability) {
         eatProbabilities.put(type, probability);
@@ -31,18 +31,13 @@ public abstract class Animal extends Organism implements Movable, Eatable, Organ
     public double getEatProbability(Type type) {
         return eatProbabilities.getOrDefault(type, 0.0);
     }
-
-    public void execute(GameField gameField) {
-        eat();
-        reproduceTribe();
-        move(gameField);
-    }
+    public Lock getLock() {return animalLock;}
 
     public void move(GameField gameField) {
 
         Cell currentCell = this.getCell();
         if (currentCell == null) {
-            return; // Организм не знает, в какой клетке он находится
+            return;
         }
 
         Random random = ThreadLocalRandom.current();
@@ -54,19 +49,30 @@ public abstract class Animal extends Organism implements Movable, Eatable, Organ
         int newY = calculateNewY(direction, this.getCurrentY(), speed, gameField);
 
         if (newX < 0 || newX >= gameField.getWidth() || newY < 0 || newY >= gameField.getHeight()) {
-            return; // Ограничение по границам поля
+            return;
         }
 
         Cell newCell = gameField.getCells()[newX][newY];
-        Lock newCellLock = newCell.getLock();
-        if (!newCellLock.tryLock()) {
-            return; // Не удалось захватить блокировку новой ячейки
-        }
 
+        Lock residentsLock = newCell.getResidentsLock();
+        if (residentsLock == null) {
+            return;
+        }
+        boolean residentsLockAcquired = false;
         try {
+            residentsLockAcquired = residentsLock.tryLock();
+            if (residentsLockAcquired) {
+
             Organism organism = this.reproduce();
             Map<Type, Set<Organism>> residents = newCell.getResidents();
             Type targetType = targetType(organism);
+
+                Lock newCellLock = newCell.getLock();
+                boolean newCellLockAcquired = false;
+
+                try {
+                    newCellLockAcquired = newCellLock.tryLock();
+                    if (newCellLockAcquired) {
 
             Map<Type, Integer> typeCounts = typeCounts(newCell);
             int count = typeCounts.getOrDefault(targetType, 0);
@@ -76,76 +82,50 @@ public abstract class Animal extends Organism implements Movable, Eatable, Organ
                 count++;
 
                 Lock currentCellLock = currentCell.getLock();
-                currentCellLock.lock();
+                boolean currentCellLockAcquired = false;
+
                 try {
+                    currentCellLockAcquired = currentCellLock.tryLock();
+                    if (currentCellLockAcquired) {
+
                     Map<Type, Set<Organism>> currentResidents = currentCell.getResidents();
                     this.killOrganism();
                     currentResidents.values().forEach(organisms -> organisms.remove(this));
+                    }
                 } finally {
-                    currentCellLock.unlock();
+                    if (currentCellLockAcquired) {
+                        currentCellLock.unlock();
+                    }
                 }
             }
-
+                    }
+                } finally {
+                    if (newCellLockAcquired) {
+                        newCellLock.unlock();
+                    }
+                }
+            }
         } finally {
-            newCellLock.unlock();
+            if (residentsLockAcquired) {
+                residentsLock.unlock();
+            }
         }
-
-//
-//        if (newX >= 0 && newX < gameField.getWidth() && newY >= 0 && newY < gameField.getHeight()) {
-//            // Создаем временную коллекцию для хранения информации о перемещении
-//            Lock newCellLock = gameField.getCells()[newX][newY].getLock();
-//            newCellLock.lock();
-//            try {
-//                // Получаем новую клетку и перемещаемся в нее, если она свободна
-//                Cell newCell = gameField.getCells()[newX][newY];
-//                Organism organism = this.reproduce();
-//                Map<Type, Set<Organism>> residents = newCell.getResidents();
-//
-//                Map<Type, Integer> typeIntegerMap = typeCounts(newCell);
-//
-//                int count = typeIntegerMap.getOrDefault(targetType(organism), 0);
-//                if (count < this.getMaxNumPerCell()) {
-//                    residents.get(targetType(organism)).add(organism);
-//                    ++count;
-//
-//                    Lock currentCellLock = currentCell.getLock();
-//                    currentCellLock.lock();
-//                    try {
-//                        // Получаем организмы текущей ячейки, которые будут перемещены
-//                        Map<Type, Set<Organism>> currentResidents = currentCell.getResidents();
-//                        this.killOrganism();
-//                        List<Organism> deadPreys = new ArrayList<>();
-//                        deadPreys.add(this);
-//
-//                        for (Type type : currentResidents.keySet()) {
-//                            Set<Organism> organisms = currentResidents.get(type);
-//                            organisms.removeAll(deadPreys);
-//                        }
-//
-//                    } finally {
-//                        currentCellLock.unlock();
-//                    }
-//
-//                }
-//
-//            } finally {
-//                newCellLock.unlock();
-//            }
-//        }
     }
 
     public void eat() {
 
         Cell currentCell = this.getCell();
         if (currentCell == null) {
-            return; // Организм не знает, в какой клетке он находится, поэтому не может есть
+            return;
         }
         Lock residentsLock = currentCell.getResidentsLock();
         if (residentsLock == null) {
-            return; // Или другие действия, если блокировка недоступна
-        }// Захватываем блокировку на уровне ячейки
-        residentsLock.lock();
+            return;
+        }
+        boolean residentsLockAcquired = false;
         try {
+            residentsLockAcquired = residentsLock.tryLock();
+            if (residentsLockAcquired) {
 
             Map<Type, Set<Organism>> residents = currentCell.getResidents();
             Random random = ThreadLocalRandom.current();
@@ -165,11 +145,6 @@ public abstract class Animal extends Organism implements Movable, Eatable, Organ
                 Double preyProbability = eatProbabilities.get(Type.getTypeFromClass(prey.getClass()));
 
                 if (preyProbability > 0.0 && chance <= preyProbability && prey.isAlive() && foodEnough <= getFoodNeed()) {
-                    Cell preyCell = prey.getCell();
-                    if (preyCell != null) { // Проверяем, что ячейка прея не равна null
-                        Lock preyLock = preyCell.getResidentsLock();
-                        if (preyLock.tryLock()) {
-                            try {
 
                                 prey.killOrganism();
                                 foodEnough += prey.getWeight();
@@ -177,65 +152,58 @@ public abstract class Animal extends Organism implements Movable, Eatable, Organ
                                 if (!prey.isAlive()) {
                                     deadPreys.add(prey);
                                 }
-                            } finally {
-                                preyLock.unlock(); // Освобождаем блокировку на уровне организма (прея)
-                            }
-                        }
-                    }
                 }
             }
             for (Type type : residents.keySet()) {
                 Set<Organism> organisms = residents.get(type);
                 organisms.removeAll(deadPreys);
             }
+            }
         } finally {
-            residentsLock.unlock(); // Освобождаем блокировку на уровне ячейки
+            if (residentsLockAcquired) {
+                residentsLock.unlock();
+            }
         }
     }
 
     public void reproduceTribe() {
         Cell currentCell = this.getCell();
         if (currentCell == null) {
-            return; // Организм не знает, в какой клетке он находится, поэтому не может есть
+            return;
         }
         Lock residentsLock = currentCell.getResidentsLock();
         if (residentsLock == null) {
-            return; // Или другие действия, если блокировка недоступна
-        } // Захватываем блокировку на уровне ячейки
-        Lock typeLock = null;
+            return;
+        }
+        boolean residentsLockAcquired = false;
+        try {
+            residentsLockAcquired = residentsLock.tryLock();
+            if (residentsLockAcquired) {
 
             Map<Type, Set<Organism>> residents = currentCell.getResidents();
-            Set<Organism> newOrganisms = new HashSet<>(); // Список для зберігання нових об'єктів
+            Set<Organism> newOrganisms = new HashSet<>();
 
             Map<Type, Integer> typeIntegerMap = typeCounts(currentCell);
-
             Type typeOfOrganism = targetType(this);
 
             int count = typeIntegerMap.getOrDefault(typeOfOrganism, 0);
 
-        residentsLock.lock();
-
-        try {
-            typeLock = currentCell.getTypeLock(typeOfOrganism);
-            typeLock.lock(); // Захватываем блокировку на уровне типа организма
-
-
-            if (count >= 2) { // Перевіряємо, чи є більше двох об'єктів даного типу
+            if (count >= 2) {
                 if (this instanceof Animal && this.isAlive()) {
                     Organism newOrganism = this.reproduce();
                     if (this.getMaxNumPerCell() > count) {
-                        newOrganisms.add(newOrganism);
+                            newOrganisms.add(newOrganism);
                     }
                 }
             }
             for (Organism organism : newOrganisms) {
                 residents.get(typeOfOrganism).add(organism);
             }
-        } finally {
-            if (typeLock != null) {
-                typeLock.unlock(); // Освобождаем блокировку на уровне типа организма
             }
-            residentsLock.unlock(); // Освобождаем блокировку на уровне ячейки
+        } finally {
+            if (residentsLockAcquired) {
+                residentsLock.unlock();
+            }
         }
     }
 

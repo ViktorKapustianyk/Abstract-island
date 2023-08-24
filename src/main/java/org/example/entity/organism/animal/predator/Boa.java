@@ -1,6 +1,5 @@
 package org.example.entity.organism.animal.predator;
 import lombok.*;
-import org.example.entity.map.GameField;
 
 @Getter
 @Setter

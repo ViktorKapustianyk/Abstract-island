@@ -4,15 +4,15 @@ import org.example.entity.map.Cell;
 import org.example.entity.map.GameField;
 import org.example.entity.organism.Organism;
 import org.example.entity.organism.Type;
-import org.example.entity.organism.animal.herbivore.Herbivore;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class StatsThread implements Runnable {
     private final GameField gameField;
+    private final ReentrantLock lock = new ReentrantLock();
 
     public StatsThread(GameField gameField) {
         this.gameField = gameField;
@@ -20,27 +20,21 @@ public class StatsThread implements Runnable {
 
     @Override
     public void run() {
-        while (true) {
-            // Вывод статистики о текущем состоянии gameField
-            synchronized (gameField) {
+            try {
+                lock.lock();
                 Map<Type, Integer> organismStatistics = getOrganismStatistics(gameField);
                 drawHistogram(organismStatistics);
+            } finally {
+                lock.unlock();
             }
-            try {
-                Thread.sleep(5000); // Задержка между выводами статистики
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
     }
     public Map<Type, Integer> getOrganismStatistics(GameField gameField) {
-
         Map<Type, Integer> statistics = new HashMap<>();
         Cell[][] cells = gameField.getCells();
         for (Cell[] row : cells) {
             for (Cell cell : row) {
-                cell.getResidentsLock().lock();
                 try {
+                    cell.getResidentsLock().lock();
                     for (Set<Organism> organisms : cell.getResidents().values()) {
                         for (Organism organism : organisms) {
                             Type type = Type.getTypeFromClass(organism.getClass());
@@ -57,7 +51,7 @@ public class StatsThread implements Runnable {
 
     public synchronized void drawHistogram(Map<Type, Integer> data) {
         int maxCount = data.values().stream().max(Integer::compareTo).orElse(0);
-        int scale = 50; // Масштаб для отображения
+        int scale = 50;
 
         for (Map.Entry<Type, Integer> entry : data.entrySet()) {
             Type type = entry.getKey();
@@ -73,24 +67,5 @@ public class StatsThread implements Runnable {
             result.append(character);
         }
         return result.toString();
-    }
-
-    public boolean hasLivingHerbivores() {
-        Cell[][] cells = gameField.getCells();
-        for (Cell[] row : cells) {
-            for (Cell cell : row) {
-                Map<Type, Set<Organism>> residents = cell.getResidents();
-                for (Set<Organism> organisms : residents.values()) {
-                    for (Organism organism : organisms) {
-                        if (organism instanceof Herbivore) {
-//                            System.out.println("The program STOP : Predator don't have ate all Herbivore");
-                            return true; // Если найден Herbivore, возвращаем true
-                        }
-                    }
-                }
-            }
-        }
-        System.out.println("The program STOP : Predator have ate all Herbivore");
-        return false; // Если не найдено Herbivore, возвращаем false
     }
 }

@@ -23,9 +23,9 @@ public class OrganismPopulationManager {
                     for (int k = 0; k < organismInfo.getMaxNumPerCell() / 2; k++) {
                         Organism organism = organismFactory.createOrganism(organismInfo);
                         tribe.add(organism);
-                        organism.setCell(cell); // Устанавливаем текущую клетку организма
-                        organism.setCurrentX(i); // Устанавливаем текущие координаты X
-                        organism.setCurrentY(j); // Устанавливаем текущие координаты Y
+                        organism.setCell(cell);
+                        organism.setCurrentX(i);
+                        organism.setCurrentY(j);
                     }
                 }
             }

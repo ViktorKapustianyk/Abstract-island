@@ -1,7 +1,7 @@
 package org.example.entity.organism;
 
-import org.example.entity.organism.animal.herbivore.Rabbit;
-import org.example.entity.organism.animal.predator.Boa;
+import org.example.entity.organism.animal.herbivore.*;
+import org.example.entity.organism.animal.predator.*;
 
 import org.example.entity.organism.plant.Grass;
 
@@ -9,9 +9,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum Type {
+    WOLF(Wolf.class),
+    BOA(Boa.class),
+    FOX(Fox.class),
+    BEAR(Bear.class),
+    EAGLE(Eagle.class),
+    HORSE(Horse.class),
+    DEER(Deer.class),
     RABBIT(Rabbit.class),
-    GRASS(Grass.class),
-    BOA(Boa.class);
+    MOUSE(Mouse.class),
+    GOAT(Goat.class),
+    SHEEP(Sheep.class),
+    BOAR(Boar.class),
+    BUFFALO(Buffalo.class),
+    DUCK(Duck.class),
+    GOOSE(Goose.class),
+    GRASS(Grass.class);
 
     private final Class<? extends Organism> organismClass;
     private static final Map<Class<? extends Organism>, Type> classToTypeMap = new HashMap<>();

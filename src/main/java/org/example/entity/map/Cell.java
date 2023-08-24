@@ -11,13 +11,12 @@ import java.util.concurrent.locks.Lock;
 
 public class Cell {
     private final Map<Type, Set<Organism>> residents;
-    private Lock residentsLock = new ReentrantLock(); // Создаем блокировку для residents
-    private final Lock lock;
-    private final Map<Type, Lock> typeLocks = new HashMap<>(); // Добавляем мапу для хранения блокировок по типам
+    private Lock residentsLock = new ReentrantLock();
+    private final Lock lock = new ReentrantLock();
+    private final Map<Type, Lock> typeLocks = new HashMap<>();
 
     public Cell(Map<Type, Set<Organism>> residents) {
         this.residents = new HashMap<>();
-        this.lock = new ReentrantLock();
     }
 
     public Map<Type, Set<Organism>> getResidents() {
@@ -33,4 +32,6 @@ public class Cell {
     public Lock getResidentsLock() {
         return residentsLock;
     }
+
+
 }

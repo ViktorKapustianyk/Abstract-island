@@ -1,27 +1,573 @@
+- type: Wolf
+  weight: 50.0
+  maxNumPerCell: 30
+  speed: 3
+  foodNeed: 8
+  eatProbabilities:
+    - type: WOLF
+      probability: 0.0
+    - type: BOA
+      probability: 0.0
+    - type: FOX
+      probability: 0.0
+    - type: BEAR
+      probability: 0.0
+    - type: EAGLE
+      probability: 0.0
+    - type: HORSE
+      probability: 10.0
+    - type: DEER
+      probability: 15.0
+    - type: RABBIT
+      probability: 60.0
+    - type: MOUSE
+      probability: 80.0
+    - type: GOAT
+      probability: 60.0
+    - type: SHEEP
+      probability: 70.0
+    - type: BOAR
+      probability: 15.0
+    - type: BUFFALO
+      probability: 10.0
+    - type: DUCK
+      probability: 40.0
+    - type: GOOSE
+      probability: 0.0
+    - type: GRASS
+      probability: 0.0
 - type: Boa
   weight: 15.0
   maxNumPerCell: 30
-  speed: 5
+  speed: 1
   foodNeed: 3
   eatProbabilities:
-    - type: RABBIT
-      probability: 20
+    - type: WOLF
+      probability: 0.0
     - type: BOA
+      probability: 0.0
+    - type: FOX
+      probability: 15.0
+    - type: BEAR
+      probability: 0.0
+    - type: EAGLE
+      probability: 0.0
+    - type: HORSE
+      probability: 0.0
+    - type: DEER
+      probability: 0.0
+    - type: RABBIT
+      probability: 20.0
+    - type: MOUSE
+      probability: 40.0
+    - type: GOAT
+      probability: 0.0
+    - type: SHEEP
+      probability: 0.0
+    - type: BOAR
+      probability: 0.0
+    - type: BUFFALO
+      probability: 0.0
+    - type: DUCK
+      probability: 10.0
+    - type: GOOSE
       probability: 0.0
     - type: GRASS
       probability: 0.0
+- type: Fox
+  weight: 8.0
+  maxNumPerCell: 30
+  speed: 2
+  foodNeed: 2
+  eatProbabilities:
+    - type: WOLF
+      probability: 0.0
+    - type: BOA
+      probability: 0.0
+    - type: FOX
+      probability: 0.0
+    - type: BEAR
+      probability: 0.0
+    - type: EAGLE
+      probability: 0.0
+    - type: HORSE
+      probability: 0.0
+    - type: DEER
+      probability: 0.0
+    - type: RABBIT
+      probability: 70.0
+    - type: MOUSE
+      probability: 90.0
+    - type: GOAT
+      probability: 0.0
+    - type: SHEEP
+      probability: 0.0
+    - type: BOAR
+      probability: 0.0
+    - type: BUFFALO
+      probability: 0.0
+    - type: DUCK
+      probability: 60.0
+    - type: GOOSE
+      probability: 40.0
+    - type: GRASS
+      probability: 0.0
+- type: Bear
+  weight: 500.0
+  maxNumPerCell: 5
+  speed: 2
+  foodNeed: 80
+  eatProbabilities:
+    - type: WOLF
+      probability: 0.0
+    - type: BOA
+      probability: 80.0
+    - type: FOX
+      probability: 0.0
+    - type: BEAR
+      probability: 0.0
+    - type: EAGLE
+      probability: 0.0
+    - type: HORSE
+      probability: 40.0
+    - type: DEER
+      probability: 80.0
+    - type: RABBIT
+      probability: 80.0
+    - type: MOUSE
+      probability: 90.0
+    - type: GOAT
+      probability: 70.0
+    - type: SHEEP
+      probability: 70.0
+    - type: BOAR
+      probability: 50.0
+    - type: BUFFALO
+      probability: 20.0
+    - type: DUCK
+      probability: 10.0
+    - type: GOOSE
+      probability: 0.0
+    - type: GRASS
+      probability: 0.0
+- type: Eagle
+  weight: 6.0
+  maxNumPerCell: 20
+  speed: 3
+  foodNeed: 1
+  eatProbabilities:
+    - type: WOLF
+      probability: 0.0
+    - type: BOA
+      probability: 0.0
+    - type: FOX
+      probability: 10.0
+    - type: BEAR
+      probability: 0.0
+    - type: EAGLE
+      probability: 0.0
+    - type: HORSE
+      probability: 0.0
+    - type: DEER
+      probability: 0.0
+    - type: RABBIT
+      probability: 90.0
+    - type: MOUSE
+      probability: 90.0
+    - type: GOAT
+      probability: 0.0
+    - type: SHEEP
+      probability: 0.0
+    - type: BOAR
+      probability: 0.0
+    - type: BUFFALO
+      probability: 0.0
+    - type: DUCK
+      probability: 80.0
+    - type: GOOSE
+      probability: 0.0
+    - type: GRASS
+      probability: 0.0
+- type: Horse
+  weight: 400.0
+  maxNumPerCell: 20
+  speed: 4
+  foodNeed: 60
+  eatProbabilities:
+    - type: WOLF
+      probability: 0.0
+    - type: BOA
+      probability: 0.0
+    - type: FOX
+      probability: 0.0
+    - type: BEAR
+      probability: 0.0
+    - type: EAGLE
+      probability: 0.0
+    - type: HORSE
+      probability: 0.0
+    - type: DEER
+      probability: 0.0
+    - type: RABBIT
+      probability: 0.0
+    - type: MOUSE
+      probability: 0.0
+    - type: GOAT
+      probability: 0.0
+    - type: SHEEP
+      probability: 0.0
+    - type: BOAR
+      probability: 0.0
+    - type: BUFFALO
+      probability: 0.0
+    - type: DUCK
+      probability: 0.0
+    - type: GOOSE
+      probability: 0.0
+    - type: GRASS
+      probability: 100.0
+- type: Deer
+  weight: 300.0
+  maxNumPerCell: 20
+  speed: 4
+  foodNeed: 50
+  eatProbabilities:
+    - type: WOLF
+      probability: 0.0
+    - type: BOA
+      probability: 0.0
+    - type: FOX
+      probability: 0.0
+    - type: BEAR
+      probability: 0.0
+    - type: EAGLE
+      probability: 0.0
+    - type: HORSE
+      probability: 0.0
+    - type: DEER
+      probability: 0.0
+    - type: RABBIT
+      probability: 0.0
+    - type: MOUSE
+      probability: 0.0
+    - type: GOAT
+      probability: 0.0
+    - type: SHEEP
+      probability: 0.0
+    - type: BOAR
+      probability: 0.0
+    - type: BUFFALO
+      probability: 0.0
+    - type: DUCK
+      probability: 0.0
+    - type: GOOSE
+      probability: 0.0
+    - type: GRASS
+      probability: 100.0
 - type: Rabbit
   weight: 2.0
   maxNumPerCell: 150
-  speed: 4
+  speed: 2
   foodNeed: 0.45
   eatProbabilities:
-    - type: GRASS
-      probability: 100
-    - type: RABBIT
+    - type: WOLF
       probability: 0.0
     - type: BOA
       probability: 0.0
+    - type: FOX
+      probability: 0.0
+    - type: BEAR
+      probability: 0.0
+    - type: EAGLE
+      probability: 0.0
+    - type: HORSE
+      probability: 0.0
+    - type: DEER
+      probability: 0.0
+    - type: RABBIT
+      probability: 0.0
+    - type: MOUSE
+      probability: 0.0
+    - type: GOAT
+      probability: 0.0
+    - type: SHEEP
+      probability: 0.0
+    - type: BOAR
+      probability: 0.0
+    - type: BUFFALO
+      probability: 0.0
+    - type: DUCK
+      probability: 0.0
+    - type: GOOSE
+      probability: 0.0
+    - type: GRASS
+      probability: 100.0
+- type: Mouse
+  weight: 0.05
+  maxNumPerCell: 500
+  speed: 1
+  foodNeed: 0.01
+  eatProbabilities:
+    - type: WOLF
+      probability: 0.0
+    - type: BOA
+      probability: 0.0
+    - type: FOX
+      probability: 0.0
+    - type: BEAR
+      probability: 0.0
+    - type: EAGLE
+      probability: 0.0
+    - type: HORSE
+      probability: 0.0
+    - type: DEER
+      probability: 0.0
+    - type: RABBIT
+      probability: 0.0
+    - type: MOUSE
+      probability: 0.0
+    - type: GOAT
+      probability: 0.0
+    - type: SHEEP
+      probability: 0.0
+    - type: BOAR
+      probability: 0.0
+    - type: BUFFALO
+      probability: 0.0
+    - type: DUCK
+      probability: 0.0
+    - type: GOOSE
+      probability: 90.0
+    - type: GRASS
+      probability: 0.0
+- type: Goat
+  weight: 60
+  maxNumPerCell: 140
+  speed: 3
+  foodNeed: 10
+  eatProbabilities:
+    - type: WOLF
+      probability: 0.0
+    - type: BOA
+      probability: 0.0
+    - type: FOX
+      probability: 0.0
+    - type: BEAR
+      probability: 0.0
+    - type: EAGLE
+      probability: 0.0
+    - type: HORSE
+      probability: 0.0
+    - type: DEER
+      probability: 0.0
+    - type: RABBIT
+      probability: 0.0
+    - type: MOUSE
+      probability: 0.0
+    - type: GOAT
+      probability: 0.0
+    - type: SHEEP
+      probability: 0.0
+    - type: BOAR
+      probability: 0.0
+    - type: BUFFALO
+      probability: 0.0
+    - type: DUCK
+      probability: 0.0
+    - type: GOOSE
+      probability: 0.0
+    - type: GRASS
+      probability: 100.0
+- type: Sheep
+  weight: 70
+  maxNumPerCell: 140
+  speed: 3
+  foodNeed: 15
+  eatProbabilities:
+    - type: WOLF
+      probability: 0.0
+    - type: BOA
+      probability: 0.0
+    - type: FOX
+      probability: 0.0
+    - type: BEAR
+      probability: 0.0
+    - type: EAGLE
+      probability: 0.0
+    - type: HORSE
+      probability: 0.0
+    - type: DEER
+      probability: 0.0
+    - type: RABBIT
+      probability: 0.0
+    - type: MOUSE
+      probability: 0.0
+    - type: GOAT
+      probability: 0.0
+    - type: SHEEP
+      probability: 0.0
+    - type: BOAR
+      probability: 0.0
+    - type: BUFFALO
+      probability: 0.0
+    - type: DUCK
+      probability: 0.0
+    - type: GOOSE
+      probability: 0.0
+    - type: GRASS
+      probability: 100.0
+- type: Boar
+  weight: 400
+  maxNumPerCell: 50
+  speed: 2
+  foodNeed: 50
+  eatProbabilities:
+    - type: WOLF
+      probability: 0.0
+    - type: BOA
+      probability: 0.0
+    - type: FOX
+      probability: 0.0
+    - type: BEAR
+      probability: 0.0
+    - type: EAGLE
+      probability: 0.0
+    - type: HORSE
+      probability: 0.0
+    - type: DEER
+      probability: 0.0
+    - type: RABBIT
+      probability: 0.0
+    - type: MOUSE
+      probability: 50.0
+    - type: GOAT
+      probability: 0.0
+    - type: SHEEP
+      probability: 0.0
+    - type: BOAR
+      probability: 0.0
+    - type: BUFFALO
+      probability: 0.0
+    - type: DUCK
+      probability: 0.0
+    - type: GOOSE
+      probability: 90.0
+    - type: GRASS
+      probability: 100.0
+- type: Buffalo
+  weight: 700
+  maxNumPerCell: 10
+  speed: 3
+  foodNeed: 100
+  eatProbabilities:
+    - type: WOLF
+      probability: 0.0
+    - type: BOA
+      probability: 0.0
+    - type: FOX
+      probability: 0.0
+    - type: BEAR
+      probability: 0.0
+    - type: EAGLE
+      probability: 0.0
+    - type: HORSE
+      probability: 0.0
+    - type: DEER
+      probability: 0.0
+    - type: RABBIT
+      probability: 0.0
+    - type: MOUSE
+      probability: 0.0
+    - type: GOAT
+      probability: 0.0
+    - type: SHEEP
+      probability: 0.0
+    - type: BOAR
+      probability: 0.0
+    - type: BUFFALO
+      probability: 0.0
+    - type: DUCK
+      probability: 0.0
+    - type: GOOSE
+      probability: 0.0
+    - type: GRASS
+      probability: 100.0
+- type: Duck
+  weight: 1
+  maxNumPerCell: 200
+  speed: 4
+  foodNeed: 0.15
+  eatProbabilities:
+    - type: WOLF
+      probability: 0.0
+    - type: BOA
+      probability: 0.0
+    - type: FOX
+      probability: 0.0
+    - type: BEAR
+      probability: 0.0
+    - type: EAGLE
+      probability: 0.0
+    - type: HORSE
+      probability: 0.0
+    - type: DEER
+      probability: 0.0
+    - type: RABBIT
+      probability: 0.0
+    - type: MOUSE
+      probability: 0.0
+    - type: GOAT
+      probability: 0.0
+    - type: SHEEP
+      probability: 0.0
+    - type: BOAR
+      probability: 0.0
+    - type: BUFFALO
+      probability: 0.0
+    - type: DUCK
+      probability: 0.0
+    - type: GOOSE
+      probability: 90.0
+    - type: GRASS
+      probability: 100.0
+- type: Goose
+  weight: 0.01
+  maxNumPerCell: 1000
+  speed: 0
+  foodNeed: 0
+  eatProbabilities:
+    - type: WOLF
+      probability: 0.0
+    - type: BOA
+      probability: 0.0
+    - type: FOX
+      probability: 0.0
+    - type: BEAR
+      probability: 0.0
+    - type: EAGLE
+      probability: 0.0
+    - type: HORSE
+      probability: 0.0
+    - type: DEER
+      probability: 0.0
+    - type: RABBIT
+      probability: 0.0
+    - type: MOUSE
+      probability: 0.0
+    - type: GOAT
+      probability: 0.0
+    - type: SHEEP
+      probability: 0.0
+    - type: BOAR
+      probability: 0.0
+    - type: BUFFALO
+      probability: 0.0
+    - type: DUCK
+      probability: 0.0
+    - type: GOOSE
+      probability: 0.0
+    - type: GRASS
+      probability: 100.0
 - type: Grass
   weight: 1.0
   maxNumPerCell: 200
