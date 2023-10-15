@@ -534,7 +534,7 @@
   weight: 0.01
   maxNumPerCell: 1000
   speed: 0
-  foodNeed: 0.0
+  foodNeed: 0
   eatProbabilities:
     - type: WOLF
       probability: 0.0
